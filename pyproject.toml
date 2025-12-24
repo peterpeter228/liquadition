@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "liq-heatmap-mcp"
+version = "0.1.0"
+description = "MCP Server for BTC/ETH Liquidation Heatmap capture and analysis"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Developer", email = "dev@example.com"}
+]
+dependencies = [
+    "fastmcp>=0.4.0",
+    "playwright>=1.40.0",
+    "opencv-python-headless>=4.8.0",
+    "numpy>=1.24.0",
+    "httpx>=0.25.0",
+    "Pillow>=10.0.0",
+    "scipy>=1.11.0",
+    "uvicorn>=0.24.0",
+    "starlette>=0.32.0",
+]
+
+[project.optional-dependencies]
+ocr = ["pytesseract>=0.3.10"]
+dev = ["pytest>=7.0.0", "black>=23.0.0", "ruff>=0.1.0"]
+
+[project.scripts]
+liq-heatmap-mcp = "liq_heatmap_mcp.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["liq_heatmap_mcp*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

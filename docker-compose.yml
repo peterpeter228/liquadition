@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  liq-heatmap-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: liq-heatmap-mcp
+    ports:
+      - "8000:8000"
+    environment:
+      # LLM API Configuration (optional)
+      - COMET_API_KEY=${COMET_API_KEY:-}
+      - COMET_BASE_URL=${COMET_BASE_URL:-https://api.cometapi.com/v1}
+      - COMET_MODEL=${COMET_MODEL:-gpt-5.2}
+      - COMET_REASONING=${COMET_REASONING:-xhigh}
+      
+      # Cookie configuration (optional, for bypassing restrictions)
+      - COINGLASS_COOKIE=${COINGLASS_COOKIE:-}
+      - COINANK_COOKIE=${COINANK_COOKIE:-}
+      
+      # Cache and debug
+      - SCREENSHOT_CACHE_DIR=/tmp/liq-heatmap
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG_CROP=${DEBUG_CROP:-0}
+    volumes:
+      # Mount cache directory for debugging
+      - ./cache:/tmp/liq-heatmap
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/sse -o /dev/null -w '%{http_code}' | grep -q '200\\|400' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Optional: with OCR support
+  liq-heatmap-mcp-ocr:
+    build:
+      context: .
+      dockerfile: Dockerfile.ocr
+    container_name: liq-heatmap-mcp-ocr
+    ports:
+      - "8001:8000"
+    environment:
+      - COMET_API_KEY=${COMET_API_KEY:-}
+      - COMET_BASE_URL=${COMET_BASE_URL:-https://api.cometapi.com/v1}
+      - COMET_MODEL=${COMET_MODEL:-gpt-5.2}
+      - COMET_REASONING=${COMET_REASONING:-xhigh}
+      - COINGLASS_COOKIE=${COINGLASS_COOKIE:-}
+      - COINANK_COOKIE=${COINANK_COOKIE:-}
+      - SCREENSHOT_CACHE_DIR=/tmp/liq-heatmap
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG_CROP=${DEBUG_CROP:-0}
+    volumes:
+      - ./cache-ocr:/tmp/liq-heatmap
+    restart: unless-stopped
+    profiles:
+      - ocr
