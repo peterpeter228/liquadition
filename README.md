@@ -33,17 +33,43 @@ docker-compose up -d
 curl http://localhost:8025/health
 ```
 
-### Local Installation
+### Local Installation (Ubuntu 22.04+)
 
+**Quick Setup (Recommended):**
 ```bash
-# Requires Python 3.11+
+# One-line setup
+chmod +x setup.sh && ./setup.sh
+
+# Start the server
+./start.sh
+```
+
+**Manual Setup:**
+```bash
+# Install system dependencies
+sudo apt-get update
+sudo apt-get install -y python3-venv python3-full
+
+# Create virtual environment (required for Python 3.12+)
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install Python packages
 pip install -r requirements.txt
+
+# Install Playwright and Chromium browser
 pip install playwright
 playwright install chromium
+playwright install-deps chromium
+
+# Copy environment config
+cp .env.example .env
 
 # Run the server
 python -m liq_heatmap_mcp --host 0.0.0.0 --port 8025 --transport sse
 ```
+
+**Note:** Ubuntu 24.04+ with Python 3.12 requires a virtual environment due to PEP 668.
 
 ## CherryStudio Configuration
 
