@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  liq-heatmap-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: liq-heatmap-mcp
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+    environment:
+      # LLM Configuration (optional)
+      - COMET_API_KEY=${COMET_API_KEY:-}
+      - COMET_BASE_URL=${COMET_BASE_URL:-https://api.cometapi.com/v1}
+      - COMET_MODEL=${COMET_MODEL:-gpt-4o}
+      - COMET_REASONING=${COMET_REASONING:-xhigh}
+      
+      # Cookie configuration (optional)
+      - COINGLASS_COOKIE=${COINGLASS_COOKIE:-}
+      - COINANK_COOKIE=${COINANK_COOKIE:-}
+      
+      # Cache and debug settings
+      - SCREENSHOT_CACHE_DIR=/tmp/liq-heatmap
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DEBUG_CROP=${DEBUG_CROP:-0}
+    volumes:
+      # Persist cache for debugging
+      - heatmap-cache:/tmp/liq-heatmap
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8025/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+volumes:
+  heatmap-cache:
+    driver: local

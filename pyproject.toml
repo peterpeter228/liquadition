@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "liq-heatmap-mcp"
+version = "0.1.0"
+description = "MCP Server for BTC/ETH Liquidation Heatmap capture and analysis"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Liquidation Heatmap MCP", email = "dev@example.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "playwright>=1.40.0",
+    "opencv-python-headless>=4.8.0",
+    "httpx>=0.25.0",
+    "numpy>=1.24.0",
+    "Pillow>=10.0.0",
+    "scipy>=1.11.0",
+    "uvicorn>=0.24.0",
+    "starlette>=0.32.0",
+]
+
+[project.optional-dependencies]
+ocr = ["pytesseract>=0.3.10"]
+dev = ["pytest>=7.0.0", "pytest-asyncio>=0.21.0", "black>=23.0.0", "ruff>=0.1.0"]
+
+[project.scripts]
+liq-heatmap-mcp = "liq_heatmap_mcp.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["liq_heatmap_mcp*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "W", "I"]
