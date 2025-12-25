@@ -82,7 +82,7 @@ Add this MCP server to CherryStudio:
   "mcpServers": {
     "liq-heatmap": {
       "type": "sse",
-      "url": "http://localhost:8025/sse/"
+      "url": "http://localhost:8025/sse"
     }
   }
 }
@@ -95,7 +95,7 @@ Or if running on a remote server:
   "mcpServers": {
     "liq-heatmap": {
       "type": "sse", 
-      "url": "http://your-server-ip:8025/sse/"
+      "url": "http://your-server-ip:8025/sse"
     }
   }
 }
@@ -370,8 +370,8 @@ Without LLM, the system falls back to algo mode automatically.
 | Endpoint | Description |
 |----------|-------------|
 | `GET /health` | Health check |
-| `GET /sse/` | SSE connection endpoint |
-| `POST /messages/` | Message handling endpoint |
+| `GET /sse` | SSE connection endpoint |
+| `POST /messages` | Message handling endpoint |
 
 ## License
 

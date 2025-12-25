@@ -458,13 +458,15 @@ async def run_server(host: str = "0.0.0.0", port: int = 8025, transport: str = "
     if transport == "sse":
         from mcp.server.sse import SseServerTransport
         from starlette.applications import Starlette
-        from starlette.routing import Mount, Route
+        from starlette.routing import Route
         from starlette.responses import JSONResponse
         import uvicorn
         
-        sse = SseServerTransport("/messages/")
+        # SSE transport - messages endpoint is relative to where client connects
+        sse = SseServerTransport("/messages")
         
         async def handle_sse(request):
+            """Handle SSE connection."""
             async with sse.connect_sse(
                 request.scope, request.receive, request._send
             ) as streams:
@@ -472,24 +474,25 @@ async def run_server(host: str = "0.0.0.0", port: int = 8025, transport: str = "
                     streams[0], streams[1], server.create_initialization_options()
                 )
         
+        async def handle_messages(request):
+            """Handle POST messages from client."""
+            await sse.handle_post_message(request.scope, request.receive, request._send)
+        
         async def health_check(request):
             return JSONResponse({"status": "ok", "server": "liq-heatmap-mcp"})
         
         app = Starlette(
-            debug=False,
+            debug=True,
             routes=[
-                Route("/health", health_check),
-                Mount("/sse", routes=[
-                    Route("/", handle_sse),
-                ]),
+                Route("/health", health_check, methods=["GET"]),
+                Route("/sse", handle_sse, methods=["GET"]),
+                Route("/messages", handle_messages, methods=["POST"]),
             ],
         )
         
-        # Mount SSE endpoint
-        app.routes.append(Mount("/messages", app=sse.handle_post_message))
-        
         logger.info(f"Starting SSE server on {host}:{port}")
-        logger.info(f"SSE endpoint: http://{host}:{port}/sse/")
+        logger.info(f"SSE endpoint: http://{host}:{port}/sse")
+        logger.info(f"Messages endpoint: http://{host}:{port}/messages")
         logger.info(f"Health check: http://{host}:{port}/health")
         
         config = uvicorn.Config(app, host=host, port=port, log_level="info")
