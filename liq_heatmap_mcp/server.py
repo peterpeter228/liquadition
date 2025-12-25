@@ -453,42 +453,54 @@ async def handle_report(args: dict) -> list[TextContent]:
 
 async def run_server(host: str = "0.0.0.0", port: int = 8025, transport: str = "sse"):
     """Run the MCP server."""
-    server = create_mcp_server()
+    mcp_server = create_mcp_server()
     
     if transport == "sse":
         from mcp.server.sse import SseServerTransport
-        from starlette.applications import Starlette
-        from starlette.routing import Route
-        from starlette.responses import JSONResponse
         import uvicorn
         
         # SSE transport - messages endpoint is relative to where client connects
         sse = SseServerTransport("/messages")
         
-        async def handle_sse(request):
-            """Handle SSE connection."""
-            async with sse.connect_sse(
-                request.scope, request.receive, request._send
-            ) as streams:
-                await server.run(
-                    streams[0], streams[1], server.create_initialization_options()
-                )
-        
-        async def handle_messages(request):
-            """Handle POST messages from client."""
-            await sse.handle_post_message(request.scope, request.receive, request._send)
-        
-        async def health_check(request):
-            return JSONResponse({"status": "ok", "server": "liq-heatmap-mcp"})
-        
-        app = Starlette(
-            debug=True,
-            routes=[
-                Route("/health", health_check, methods=["GET"]),
-                Route("/sse", handle_sse, methods=["GET"]),
-                Route("/messages", handle_messages, methods=["POST"]),
-            ],
-        )
+        async def app(scope, receive, send):
+            """Raw ASGI application."""
+            path = scope.get("path", "")
+            method = scope.get("method", "GET")
+            
+            if path == "/health" and method == "GET":
+                # Health check endpoint
+                await send({
+                    "type": "http.response.start",
+                    "status": 200,
+                    "headers": [[b"content-type", b"application/json"]],
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": b'{"status":"ok","server":"liq-heatmap-mcp"}',
+                })
+            
+            elif path == "/sse" and method == "GET":
+                # SSE connection endpoint
+                async with sse.connect_sse(scope, receive, send) as streams:
+                    await mcp_server.run(
+                        streams[0], streams[1], mcp_server.create_initialization_options()
+                    )
+            
+            elif path.startswith("/messages") and method == "POST":
+                # Message handling endpoint
+                await sse.handle_post_message(scope, receive, send)
+            
+            else:
+                # 404 Not Found
+                await send({
+                    "type": "http.response.start",
+                    "status": 404,
+                    "headers": [[b"content-type", b"application/json"]],
+                })
+                await send({
+                    "type": "http.response.body",
+                    "body": b'{"error":"Not Found"}',
+                })
         
         logger.info(f"Starting SSE server on {host}:{port}")
         logger.info(f"SSE endpoint: http://{host}:{port}/sse")
@@ -502,4 +514,4 @@ async def run_server(host: str = "0.0.0.0", port: int = 8025, transport: str = "
     else:
         # Stdio transport (for testing)
         async with stdio_server() as (read_stream, write_stream):
-            await server.run(read_stream, write_stream, server.create_initialization_options())
+            await mcp_server.run(read_stream, write_stream, mcp_server.create_initialization_options())
