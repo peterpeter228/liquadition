@@ -1,0 +1,13 @@
+# Core dependencies
+mcp>=1.0.0
+playwright>=1.40.0
+opencv-python-headless>=4.8.0
+httpx>=0.25.0
+numpy>=1.24.0
+Pillow>=10.0.0
+scipy>=1.11.0
+uvicorn>=0.24.0
+starlette>=0.32.0
+
+# Optional OCR support (comment out if not needed)
+# pytesseract>=0.3.10
